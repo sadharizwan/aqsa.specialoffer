@@ -50,7 +50,7 @@
       z-index: 100;
     }
     .logo {
-      height: 60px;
+      height: 90px; /* Increased logo size */
     }
     .header-box {
       text-align: right;
@@ -59,6 +59,11 @@
       font-size: 1.8rem;
       color: var(--primary);
     }
+    .header-box h3 {
+      font-size: 1rem;
+      color:#75c526;
+    }
+
     .countdown-container {
       display: inline-block;
       background: #ffefc3;
@@ -83,21 +88,11 @@
       transition: width 1s linear;
     }
 
-    /* Search and Dark Mode */
+    /* Dark Mode Button */
     .top-controls {
       display: flex;
-      gap: 10px;
-      margin: 15px auto;
-      max-width: 1200px;
       justify-content: center;
-      flex-wrap: wrap;
-    }
-    input[type="text"] {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 1rem;
-      width: 250px;
+      margin: 15px auto;
     }
     .dark-toggle {
       padding: 10px 15px;
@@ -136,6 +131,7 @@
       object-fit: contain;
       border-bottom: 2px solid var(--primary);
       background: #fafafa;
+      cursor: pointer;
     }
     .product h2 {
       font-size: 1rem;
@@ -183,20 +179,28 @@
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.8);
+      overflow-y: auto;
     }
     .modal-content {
       background: var(--card-bg);
       margin: 5% auto;
       padding: 20px;
       border-radius: 12px;
-      max-width: 400px;
+      max-width: 350px; /* Fixed width to fit screen */
+      width: 90%;
       text-align: center;
       color: var(--text-color);
       position: relative;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
     }
     .modal img {
       width: 100%;
       border-radius: 8px;
+      margin-bottom: 15px;
     }
     .close {
       position: absolute;
@@ -208,27 +212,51 @@
     }
     .close:hover { color: var(--accent); }
 
+    /* Rotate Animation */
+   /* Rotate Animation */
+@keyframes rotate360 {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.rotate-once {
+  animation: rotate360 5s ease-in-out;
+}
+
+
     @media (max-width: 600px) {
       .header-box h1 { font-size: 1.5rem; text-align: center; }
       .product img { height: 160px; }
-      input[type="text"] { width: 100%; }
     }
-    
+    @media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .header-box {
+    text-align: center;
+    margin-top: 10px;
+  }
+  .logo {
+    height: 80px; /* Slightly smaller for mobile */
+  }
+}
+
   </style>
 </head>
 <body>
   <header>
     <img src="images/logo.png" alt="Supermarket Logo" class="logo" />
     <div class="header-box">
-      <h1>WEEKLY OFFER</h1>
+      <h1>SPECIAL OFFER</h1>
+      <h3>Valid Till:31-08-25</h3>
       <div class="countdown-container"><span id="countdown"></span></div>
       <div class="progress-bar"><div class="progress" id="progress"></div></div>
     </div>
   </header>
 
-  <!-- Controls -->
+  <!-- Dark Mode -->
   <div class="top-controls">
-    <input type="text" id="searchInput" placeholder="Search products...">
     <button class="dark-toggle" id="darkModeBtn"><i class="fa-solid fa-moon"></i> Dark Mode</button>
   </div>
 
@@ -302,38 +330,28 @@
         .then(res => res.json())
         .then(data => {
           const productList = document.getElementById('productList');
-
-          function renderProducts(products) {
-            productList.innerHTML = '';
-            products.forEach(product => {
-              const div = document.createElement('div');
-              div.className = 'product';
-              div.innerHTML = `
-                <div class="ribbon">${product.discount}% OFF</div>
-                <img src="images/${product.image}" alt="${product.productName}" loading="lazy" />
-                <h2>${product.productName}</h2>
-                <p>MRP: <span class="mrp-price">Rs. ${product.mrp.toFixed(2)}</span></p>
-                <p class="offer-price">Rs. ${product.offerPrice.toFixed(2)}</p>
-              `;
-              div.querySelector('img').addEventListener('click', () => {
-                modalImg.src = `images/${product.image}`;
-                modalName.textContent = product.productName;
-                modalMRP.textContent = `Rs. ${product.mrp.toFixed(2)}`;
-                modalOffer.textContent = `Rs. ${product.offerPrice.toFixed(2)}`;
-                modalDiscount.textContent = `${product.discount}% OFF`;
-                modal.style.display = 'block';
-              });
-              productList.appendChild(div);
+          data.forEach(product => {
+            const div = document.createElement('div');
+            div.className = 'product';
+            div.innerHTML = `
+              <div class="ribbon">${product.discount}% OFF</div>
+              <img src="images/${product.image}" alt="${product.productName}" loading="lazy" />
+              <h2>${product.productName}</h2>
+              <p>MRP: <span class="mrp-price">Rs. ${product.mrp.toFixed(2)}</span></p>
+              <p class="offer-price">Rs. ${product.offerPrice.toFixed(2)}</p>
+            `;
+            div.querySelector('img').addEventListener('click', () => {
+              modalImg.src = `images/${product.image}`;
+              modalImg.classList.remove('rotate-once'); // reset animation
+              void modalImg.offsetWidth; // trigger reflow
+              modalImg.classList.add('rotate-once'); // apply rotation
+              modalName.textContent = product.productName;
+              modalMRP.textContent = `Rs. ${product.mrp.toFixed(2)}`;
+              modalOffer.textContent = `Rs. ${product.offerPrice.toFixed(2)}`;
+              modalDiscount.textContent = `${product.discount}% OFF`;
+              modal.style.display = 'block';
             });
-          }
-
-          renderProducts(data);
-
-          // Search Filter
-          document.getElementById('searchInput').addEventListener('input', e => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filtered = data.filter(p => p.productName.toLowerCase().includes(searchTerm));
-            renderProducts(filtered);
+            productList.appendChild(div);
           });
         });
     });
